@@ -16,7 +16,7 @@ module Spree
       options = {
         customer_id: payment.source.gateway_customer_profile_id
       }.merge! address_for(payment)
-      
+
       # Create payment
       return if source.number.blank? || source.gateway_payment_profile_id.present?
 
@@ -41,7 +41,28 @@ module Spree
           token: credit_card.gateway_payment_profile_id
         })
       end
+      return money, creditcard, options
+    end
 
+    def address_for(payment)
+      {}.tap do |options|
+        if address = payment.order.bill_address
+          options.merge!(address: {
+            address1: address.address1,
+            address2: address.address2,
+            city: address.city,
+            zip: address.zipcode
+          })
+
+          if country = address.country
+            options[:address].merge!(country: country.name)
+          end
+
+          if state = address.state
+            options[:address].merge!(state: state.name)
+          end
+        end
+      end
     end
     
 
