@@ -17,6 +17,7 @@ module Spree
         customer_id: payment.source.gateway_customer_profile_id
       }.merge! address_for(payment)
 
+      source = payment.source
       # Create payment
       return if source.number.blank? || source.gateway_payment_profile_id.present?
 
