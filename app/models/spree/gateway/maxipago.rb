@@ -71,6 +71,7 @@ module Spree
           gateway_customer_profile_id: customer_id,
         })
       else
+        provider.delete_customer(possible_customer_id)
         payment.send(:gateway_error, response.message)
       end
     end
