@@ -20,58 +20,42 @@ module Spree
     end
 
     def create_profile(payment)
-      return unless payment.source.gateway_payment_profile_id.nil?
+      return unless payment.source.gateway_payment_profile_id.nil? && source.gateway_customer_profile_id.nil?
       source = payment.source
 
-      # Try to 
-      if source.gateway_customer_profile_id.nil?
-        if source.respond_to?(:user) && source.user
-          source_with_possible_customer_id = source.class.where(user_id: source.user.id).find do |source|
-            source.gateway_customer_profile_id.present?
-          end
-          if source_with_possible_customer_id.present?
-            possible_customer_id = source_with_possible_customer_id.gateway_customer_profile_id
-          else
-            user_info = {
-              customerIdExt: source.user.id,
-              firstName: source.user.first_name,
-              lastName: source.user.last_name,
-              zip: payment.order.bill_address.zipcode,
-              email: source.user.email,
-              dob: "04/23/1997",
-              ssn: source.user.cpf,
-              sex: "M"
-            }.delete_if{ |_k, v| v.nil? || v == "" }
-            response = provider.add_customer(user_info)
-            possible_customer_id = response.params["customer_id"]
-          end
-        end
-      end
-      customer_id = source.gateway_customer_profile_id || possible_customer_id
+      user_info = {
+        customerIdExt: SecureRandom.uuid,
+        firstName: source.user.first_name,
+        lastName: source.user.last_name,
+        zip: payment.order.bill_address.zipcode,
+        email: source.user.email,
+        dob: "04/23/1997",
+        ssn: source.user.cpf,
+        sex: "M"
+      }.delete_if{ |_k, v| v.nil? || v == "" }
 
-      # Build options hash
-      options = if customer_id
-        { customer_id: customer_id }
-      else
-        {}
-      end
+      response = provider.add_customer(user_info)
+      return unless response.success?
+
+      customer_id = response.params["customer_id"]
+      options = {
+        customer_id: customer_id
+      }
       options.merge! address_for(payment)
-
-      source = payment.source
-      user = payment.order.user
       
       # Create payment
       return if source.number.blank?
 
       creditcard = source
       response = provider.store(creditcard, options)
+      
       if response.success?
         payment.source.update_attributes!({
           gateway_payment_profile_id: response.params["token"],
           gateway_customer_profile_id: customer_id,
         })
       else
-        provider.delete_customer(possible_customer_id)
+        provider.delete_customer(customer_id)
         payment.send(:gateway_error, response.message)
       end
     end
