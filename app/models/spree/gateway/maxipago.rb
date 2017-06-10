@@ -20,7 +20,8 @@ module Spree
     end
 
     def create_profile(payment)
-      return unless payment.source.gateway_payment_profile_id.nil? && source.gateway_customer_profile_id.nil?
+      return unless payment.source.gateway_payment_profile_id.nil? && payment.source.gateway_customer_profile_id.nil?
+      
       source = payment.source
 
       # Try to create a customer_id from the information provided
