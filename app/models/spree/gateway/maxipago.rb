@@ -23,6 +23,7 @@ module Spree
       return unless payment.source.gateway_payment_profile_id.nil? && source.gateway_customer_profile_id.nil?
       source = payment.source
 
+      # Try to create a customer_id from the information provided
       user_info = {
         customerIdExt: SecureRandom.uuid,
         firstName: source.user.first_name,
@@ -33,19 +34,17 @@ module Spree
         ssn: source.user.cpf,
         sex: "M"
       }.delete_if{ |_k, v| v.nil? || v == "" }
-
       response = provider.add_customer(user_info)
       return unless response.success?
 
+      # Create options hash with customer_id
       customer_id = response.params["customer_id"]
       options = {
         customer_id: customer_id
       }
       options.merge! address_for(payment)
-      
       # Create payment
       return if source.number.blank?
-
       creditcard = source
       response = provider.store(creditcard, options)
       
