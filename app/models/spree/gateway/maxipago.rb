@@ -8,7 +8,7 @@ module Spree
     end
 
     def purchase(money, creditcard, gateway_options)
-      provider.purchase(*options_for_purchase_or_auth(money, creditcard, gateway_options))
+      provider.authorize(*options_for_purchase_or_auth(money, creditcard, gateway_options))
     end
 
     def authorize(money, creditcard, gateway_options)
