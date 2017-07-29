@@ -56,6 +56,7 @@ module Spree
         })
       else
         provider.delete_customer(customer_id)
+        puts "RESPONSE: #{response.error_code} and #{response.message}"
         puts response
         payment.send(:gateway_error, response.error_code || response.message)
       end
