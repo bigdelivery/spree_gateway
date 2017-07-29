@@ -24,7 +24,6 @@ module Spree
       return unless payment.source.gateway_payment_profile_id.nil? && payment.source.gateway_customer_profile_id.nil?
       
       source = payment.source
-
       # Try to create a customer_id from the information provided
       user_info = {
         customerIdExt: SecureRandom.uuid,
@@ -64,7 +63,7 @@ module Spree
     def options_for_purchase_or_auth(money, creditcard, gateway_options)
       options = {}
       options[:description] = "Spree Order ID: #{gateway_options[:order_id]}"
-
+      options[:order_id] = gateway_options[:order_id]
       if creditcard.gateway_customer_profile_id && creditcard.gateway_payment_profile_id
         creditcard = provider_class::MaxipagoPaymentToken.new({
           customer_id: creditcard.gateway_customer_profile_id,
