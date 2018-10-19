@@ -3,19 +3,6 @@ module Spree
     preference :login, :string # ID
     preference :password, :string # KEY
     preference :processor_id, :string
-    
-    CARD_TYPE_MAPPING = {
-      'American Express' => 'american_express',
-      'Diners Club' => 'diners_club',
-      'Discover' => 'discover',
-      'JCB' => 'jcb',
-      'Laser' => 'laser',
-      'Maestro' => 'maestro',
-      'MasterCard' => 'master',
-      'Solo' => 'solo',
-      'Switch' => 'switch',
-      'Visa' => 'visa'
-    }
 
     def provider_class
       ActiveMerchant::Billing::MaxipagoGateway
@@ -62,7 +49,6 @@ module Spree
       creditcard = source
       response = provider.store(creditcard, options)
       cc_type = payment.source.to_active_merchant.brand
-      cc_type = CARD_TYPE_MAPPING[cc_type] if CARD_TYPE_MAPPING.include?(cc_type)
 
       if response.success?
         payment.source.update_attributes!({
